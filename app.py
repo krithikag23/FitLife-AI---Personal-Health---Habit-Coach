@@ -50,3 +50,11 @@ def init_db():
         )
     conn.commit()
     conn.close()
+
+def get_habits():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT id, name, position FROM habits ORDER BY position;")
+    rows = cur.fetchall()
+    conn.close()
+    return rows
