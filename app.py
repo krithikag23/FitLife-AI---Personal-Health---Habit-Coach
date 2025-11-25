@@ -37,19 +37,9 @@ def init_db():
         );
         """
     )
-    # Insert default habits if empty
-    cur.execute("SELECT COUNT(*) FROM habits;")
-    if cur.fetchone()[0] == 0:
-        cur.executemany(
-            "INSERT INTO habits (name, position) VALUES (?, ?);",
-            [
-                ("Exercise 20 minutes", 1),
-                ("No sugary drinks", 2),
-                ("Meditate 5 minutes", 3),
-            ],
-        )
     conn.commit()
     conn.close()
+
 
 def get_habits():
     conn = sqlite3.connect(DB_PATH)
@@ -58,6 +48,7 @@ def get_habits():
     rows = cur.fetchall()
     conn.close()
     return rows
+
 
 def upsert_daily_log(date_str, data):
     conn = sqlite3.connect(DB_PATH)
@@ -112,7 +103,8 @@ def upsert_daily_log(date_str, data):
     conn.commit()
     conn.close()
 
-    def load_logs(days=30):
+
+def load_logs(days=30):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute(
@@ -148,6 +140,8 @@ def upsert_daily_log(date_str, data):
     df["date"] = pd.to_datetime(df["date"])
     return df.sort_values("date")
 
+
+# ---------------- Weekly Stats ----------------
 def compute_weekly_stats():
     df = load_logs(days=60)
     if df.empty:
@@ -172,10 +166,10 @@ def compute_weekly_stats():
 
     return curr, round(change, 1), weekly
 
-# ----------------- SCORE LOGIC -----------------
+
+# ---------------- Score Logic -----------------
 def compute_health_score(row):
     score = 0
-    # Steps (0–40 pts)
     steps = row.get("steps", 0)
     if steps >= 8000:
         score += 40
@@ -186,7 +180,6 @@ def compute_health_score(row):
     elif steps > 0:
         score += 10
 
-    # Sleep (0–25 pts)
     sleep = row.get("sleep_hours", 0)
     if 7 <= sleep <= 9:
         score += 25
@@ -195,7 +188,6 @@ def compute_health_score(row):
     elif 5 <= sleep < 6:
         score += 10
 
-    # Water (0–20 pts)
     water = row.get("water_glasses", 0)
     if water >= 8:
         score += 20
@@ -206,15 +198,13 @@ def compute_health_score(row):
     elif water > 0:
         score += 5
 
-    # Habits (0–15 pts)
-    habits_count = row.get("habit_1_done", 0) + row.get("habit_2_done", 0) + row.get(
-        "habit_3_done", 0
-    )
-    score += habits_count * 5  # 3 habits max → 15 pts
+    habits_count = row["habit_1_done"] + row["habit_2_done"] + row["habit_3_done"]
+    score += habits_count * 5
 
     return min(score, 100)
 
-# ----------------- UI -----------------
+
+# ---------------- UI -----------------
 def main():
     Path(DB_PATH).touch(exist_ok=True)
     init_db()
@@ -230,7 +220,7 @@ def main():
 
     tabs = st.tabs(["📆 Today", "📊 Insights", "📜 History"])
 
-    # --------- TODAY TAB ---------
+    # ================= TODAY TAB =================
     with tabs[0]:
         st.subheader("📆 Log Today")
 
@@ -273,110 +263,46 @@ def main():
             upsert_daily_log(date_str, data)
             st.success(f"Saved log for {date_str} ✅")
 
-# --------- INSIGHTS TAB ---------
-with tabs[1]:
-    st.subheader("📊 Wellness Insights")
+    # ================= INSIGHTS TAB =================
+    with tabs[1]:
+        st.subheader("📊 Wellness Insights")
 
-    df = load_logs(days=30)
-    if df.empty:
-        st.info("No data yet. Log at least one day in the 'Today' tab.")
-    else:
-        df["health_score"] = df.apply(compute_health_score, axis=1)
-
-        colA, colB = st.columns(2)
-        with colA:
-            latest = df.iloc[-1]
-            st.metric("Today’s Health Score", f"{int(latest['health_score'])}/100")
-            st.metric("Steps (last day)", int(latest["steps"]))
-            st.metric("Water (glasses, last day)", int(latest["water_glasses"]))
-
-        with colB:
-            fig = px.line(
-                df,
-                x="date",
-                y="health_score",
-                title="Health Score Over Time",
-                markers=True,
-            )
-            fig.update_layout(yaxis_range=[0, 100])
-            st.plotly_chart(fig, use_container_width=True)
-
-
-        # ---------------- WEEKLY GOAL SECTION ----------------
-        st.markdown("### 🎯 Weekly Goal Progress")
-
-        WEEKLY_GOAL = 50000  # steps
-        current_steps, diff_pct, weekly_df = compute_weekly_stats()
-
-        if current_steps is not None:
-            progress = min(current_steps / WEEKLY_GOAL, 1.0)
-            st.progress(progress)
-
-            st.write(f"**This Week:** {int(current_steps):,} steps")
-            st.write(f"**Goal:** {WEEKLY_GOAL:,} steps")
-
-            # Motivational feedback
-            if diff_pct > 10:
-                st.success(f"🔥 You're improving! Steps increased by **+{diff_pct}%** from last week!")
-            elif diff_pct >= 0:
-                st.info(f"🙂 Slight improvement: **+{diff_pct}%** from last week.")
-            else:
-                st.warning(f"⬇ Reduced activity: **{diff_pct}%** from last week. You've got this!")
-
-            # Weekly bar chart
-            fig3 = px.bar(
-                weekly_df,
-                x=weekly_df.index,
-                y="steps",
-                title="Weekly Step Totals (Last few weeks)",
-                labels={"x": "Week Index", "steps": "Total Steps"},
-            )
-            st.plotly_chart(fig3, use_container_width=True)
-
-        else:
-            st.info("Log at least one day to show weekly statistics.")
-
-
-        st.markdown("### 🧩 Metrics Overview (Last 30 Days)")
-        fig2 = px.bar(
-            df,
-            x="date",
-            y=["steps", "water_glasses", "sleep_hours"],
-            barmode="group",
-            title="Steps, Water & Sleep Trends",
-        )
-        st.plotly_chart(fig2, use_container_width=True)
-
-
-    # --------- HISTORY TAB ---------
-    with tabs[2]:
-        st.subheader("📜 History (Last 30 days)")
         df = load_logs(days=30)
         if df.empty:
-            st.info("No logs saved yet.")
+            st.info("No data yet. Log at least one day in the 'Today' tab.")
         else:
             df["health_score"] = df.apply(compute_health_score, axis=1)
-            show_df = df[
-                [
-                    "date",
-                    "health_score",
-                    "steps",
-                    "water_glasses",
-                    "sleep_hours",
-                    "mood",
-                    "energy",
-                ]
-            ].sort_values("date", ascending=False)
-            st.dataframe(show_df, hide_index=True, use_container_width=True)
 
-            csv = show_df.to_csv(index=False).encode("utf-8")
-            st.download_button(
-                "⬇ Download CSV",
-                data=csv,
-                file_name="fitlife_history.csv",
-                mime="text/csv",
-            )
+            colA, colB = st.columns(2)
+            with colA:
+                latest = df.iloc[-1]
+                st.metric("Today’s Health Score", f"{int(latest['health_score'])}/100")
+                st.metric("Steps (last day)", int(latest["steps"]))
+                st.metric("Water (glasses, last day)", int(latest["water_glasses"]))
 
+            with colB:
+                fig = px.line(df, x="date", y="health_score", title="Health Score Over Time", markers=True)
+                fig.update_layout(yaxis_range=[0, 100])
+                st.plotly_chart(fig, use_container_width=True)
 
-if __name__ == "__main__":
-    main()
+            # 🎯 Weekly Goal Progress
+            st.markdown("### 🎯 Weekly Goal Progress")
+            WEEKLY_GOAL = 50000
+            current_steps, diff_pct, weekly_df = compute_weekly_stats()
+
+            if current_steps is not None:
+                st.progress(min(current_steps / WEEKLY_GOAL, 1.0))
+                st.write(f"**This Week:** {int(current_steps):,} steps")
+                st.write(f"**Goal:** {WEEKLY_GOAL:,} steps")
+
+                if diff_pct > 10:
+                    st.success(f"🔥 +{diff_pct}% improvement from last week!")
+                elif diff_pct >= 0:
+                    st.info(f"🙂 Slight improvement: +{diff_pct}%")
+                else:
+                    st.warning(f"⬇ Activity down by {diff_pct}% — Keep going!")
+
+                figW = px.bar(weekly_df, x=weekly_df.index, y="steps",
+                              title="Weekly Step Totals", labels={"x": "Week Index"})
+                st.plotly_chart(figW, use_contain)
+
