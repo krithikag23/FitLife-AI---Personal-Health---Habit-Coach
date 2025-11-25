@@ -147,6 +147,29 @@ def upsert_daily_log(date_str, data):
     )
     df["date"] = pd.to_datetime(df["date"])
     return df.sort_values("date")
+def compute_weekly_stats():
+    df = load_logs(days=60)
+    if df.empty:
+        return None, None, None
+
+    df["week"] = df["date"].dt.isocalendar().week
+    df["year"] = df["date"].dt.year
+
+    weekly = (
+        df.groupby(["year", "week"])["steps"]
+        .sum()
+        .reset_index()
+        .sort_values(["year", "week"])
+    )
+
+    if len(weekly) == 1:
+        return weekly.iloc[-1]["steps"], 0, weekly
+
+    curr = weekly.iloc[-1]["steps"]
+    prev = weekly.iloc[-2]["steps"]
+    change = ((curr - prev) / max(prev, 1)) * 100
+
+    return curr, round(change, 1), weekly
 
 # ----------------- SCORE LOGIC -----------------
 def compute_health_score(row):
