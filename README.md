@@ -6,3 +6,4 @@ All data stays **offline** for full privacy 🔒
 ---
 
 ## 🌟 Features
+✔ Log daily metrics  
