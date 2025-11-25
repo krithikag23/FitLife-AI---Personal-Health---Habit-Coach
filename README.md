@@ -10,3 +10,4 @@ All data stays **offline** for full privacy 🔒
 ✔ Automatic Health Score (0–100)  
 ✔ Weekly goal tracking (default: 50,000 steps)  
 ✔ Trend insights with motivational messages  
+✔ Interactive charts
