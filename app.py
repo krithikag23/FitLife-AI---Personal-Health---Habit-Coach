@@ -58,3 +58,56 @@ def get_habits():
     rows = cur.fetchall()
     conn.close()
     return rows
+
+def upsert_daily_log(date_str, data):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("SELECT id FROM daily_log WHERE date = ?;", (date_str,))
+    row = cur.fetchone()
+
+    if row is None:
+        cur.execute(
+            """
+            INSERT INTO daily_log 
+            (date, steps, water_glasses, sleep_hours, mood, energy, notes,
+             habit_1_done, habit_2_done, habit_3_done)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            """,
+            (
+                date_str,
+                data["steps"],
+                data["water_glasses"],
+                data["sleep_hours"],
+                data["mood"],
+                data["energy"],
+                data["notes"],
+                data["habit_1_done"],
+                data["habit_2_done"],
+                data["habit_3_done"],
+            ),
+        )
+    else:
+        cur.execute(
+            """
+            UPDATE daily_log SET
+            steps = ?, water_glasses = ?, sleep_hours = ?, mood = ?, energy = ?, 
+            notes = ?, habit_1_done = ?, habit_2_done = ?, habit_3_done = ?
+            WHERE date = ?;
+            """,
+            (
+                data["steps"],
+                data["water_glasses"],
+                data["sleep_hours"],
+                data["mood"],
+                data["energy"],
+                data["notes"],
+                data["habit_1_done"],
+                data["habit_2_done"],
+                data["habit_3_done"],
+                date_str,
+            ),
+        )
+
+    conn.commit()
+    conn.close()
