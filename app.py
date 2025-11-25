@@ -147,6 +147,7 @@ def upsert_daily_log(date_str, data):
     )
     df["date"] = pd.to_datetime(df["date"])
     return df.sort_values("date")
+
 def compute_weekly_stats():
     df = load_logs(days=60)
     if df.empty:
@@ -272,43 +273,80 @@ def main():
             upsert_daily_log(date_str, data)
             st.success(f"Saved log for {date_str} ✅")
 
-    # --------- INSIGHTS TAB ---------
-    with tabs[1]:
-        st.subheader("📊 Wellness Insights")
+# --------- INSIGHTS TAB ---------
+with tabs[1]:
+    st.subheader("📊 Wellness Insights")
 
-        df = load_logs(days=30)
-        if df.empty:
-            st.info("No data yet. Log at least one day in the 'Today' tab.")
-        else:
-            df["health_score"] = df.apply(compute_health_score, axis=1)
+    df = load_logs(days=30)
+    if df.empty:
+        st.info("No data yet. Log at least one day in the 'Today' tab.")
+    else:
+        df["health_score"] = df.apply(compute_health_score, axis=1)
 
-            colA, colB = st.columns(2)
-            with colA:
-                latest = df.iloc[-1]
-                st.metric("Today’s Health Score", f"{int(latest['health_score'])}/100")
-                st.metric("Steps (last day)", int(latest["steps"]))
-                st.metric("Water (glasses, last day)", int(latest["water_glasses"]))
+        colA, colB = st.columns(2)
+        with colA:
+            latest = df.iloc[-1]
+            st.metric("Today’s Health Score", f"{int(latest['health_score'])}/100")
+            st.metric("Steps (last day)", int(latest["steps"]))
+            st.metric("Water (glasses, last day)", int(latest["water_glasses"]))
 
-            with colB:
-                fig = px.line(
-                    df,
-                    x="date",
-                    y="health_score",
-                    title="Health Score Over Time",
-                    markers=True,
-                )
-                fig.update_layout(yaxis_range=[0, 100])
-                st.plotly_chart(fig, use_container_width=True)
-
-            st.markdown("### 🧩 Metrics Overview (Last 30 Days)")
-            fig2 = px.bar(
+        with colB:
+            fig = px.line(
                 df,
                 x="date",
-                y=["steps", "water_glasses", "sleep_hours"],
-                barmode="group",
-                title="Steps, Water & Sleep Trends",
+                y="health_score",
+                title="Health Score Over Time",
+                markers=True,
             )
-            st.plotly_chart(fig2, use_container_width=True)
+            fig.update_layout(yaxis_range=[0, 100])
+            st.plotly_chart(fig, use_container_width=True)
+
+
+        # ---------------- WEEKLY GOAL SECTION ----------------
+        st.markdown("### 🎯 Weekly Goal Progress")
+
+        WEEKLY_GOAL = 50000  # steps
+        current_steps, diff_pct, weekly_df = compute_weekly_stats()
+
+        if current_steps is not None:
+            progress = min(current_steps / WEEKLY_GOAL, 1.0)
+            st.progress(progress)
+
+            st.write(f"**This Week:** {int(current_steps):,} steps")
+            st.write(f"**Goal:** {WEEKLY_GOAL:,} steps")
+
+            # Motivational feedback
+            if diff_pct > 10:
+                st.success(f"🔥 You're improving! Steps increased by **+{diff_pct}%** from last week!")
+            elif diff_pct >= 0:
+                st.info(f"🙂 Slight improvement: **+{diff_pct}%** from last week.")
+            else:
+                st.warning(f"⬇ Reduced activity: **{diff_pct}%** from last week. You've got this!")
+
+            # Weekly bar chart
+            fig3 = px.bar(
+                weekly_df,
+                x=weekly_df.index,
+                y="steps",
+                title="Weekly Step Totals (Last few weeks)",
+                labels={"x": "Week Index", "steps": "Total Steps"},
+            )
+            st.plotly_chart(fig3, use_container_width=True)
+
+        else:
+            st.info("Log at least one day to show weekly statistics.")
+
+
+        st.markdown("### 🧩 Metrics Overview (Last 30 Days)")
+        fig2 = px.bar(
+            df,
+            x="date",
+            y=["steps", "water_glasses", "sleep_hours"],
+            barmode="group",
+            title="Steps, Water & Sleep Trends",
+        )
+        st.plotly_chart(fig2, use_container_width=True)
+
 
     # --------- HISTORY TAB ---------
     with tabs[2]:
