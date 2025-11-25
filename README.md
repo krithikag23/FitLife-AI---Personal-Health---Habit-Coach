@@ -7,3 +7,4 @@ All data stays **offline** for full privacy 🔒
 
 ## 🌟 Features
 ✔ Log daily metrics  
+✔ Automatic Health Score (0–100)  
