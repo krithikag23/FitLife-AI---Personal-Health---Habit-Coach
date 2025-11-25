@@ -148,3 +148,45 @@ def upsert_daily_log(date_str, data):
     df["date"] = pd.to_datetime(df["date"])
     return df.sort_values("date")
 
+# ----------------- SCORE LOGIC -----------------
+def compute_health_score(row):
+    score = 0
+    # Steps (0–40 pts)
+    steps = row.get("steps", 0)
+    if steps >= 8000:
+        score += 40
+    elif steps >= 5000:
+        score += 30
+    elif steps >= 3000:
+        score += 20
+    elif steps > 0:
+        score += 10
+
+    # Sleep (0–25 pts)
+    sleep = row.get("sleep_hours", 0)
+    if 7 <= sleep <= 9:
+        score += 25
+    elif 6 <= sleep < 7 or 9 < sleep <= 10:
+        score += 18
+    elif 5 <= sleep < 6:
+        score += 10
+
+    # Water (0–20 pts)
+    water = row.get("water_glasses", 0)
+    if water >= 8:
+        score += 20
+    elif water >= 6:
+        score += 15
+    elif water >= 4:
+        score += 10
+    elif water > 0:
+        score += 5
+
+    # Habits (0–15 pts)
+    habits_count = row.get("habit_1_done", 0) + row.get("habit_2_done", 0) + row.get(
+        "habit_3_done", 0
+    )
+    score += habits_count * 5  # 3 habits max → 15 pts
+
+    return min(score, 100)
+
