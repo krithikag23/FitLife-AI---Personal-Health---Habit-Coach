@@ -111,3 +111,40 @@ def upsert_daily_log(date_str, data):
 
     conn.commit()
     conn.close()
+
+    def load_logs(days=30):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT date, steps, water_glasses, sleep_hours, mood, energy,
+               habit_1_done, habit_2_done, habit_3_done
+        FROM daily_log
+        ORDER BY date DESC
+        LIMIT ?;
+        """,
+        (days,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+
+    if not rows:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            "date",
+            "steps",
+            "water_glasses",
+            "sleep_hours",
+            "mood",
+            "energy",
+            "habit_1_done",
+            "habit_2_done",
+            "habit_3_done",
+        ],
+    )
+    df["date"] = pd.to_datetime(df["date"])
+    return df.sort_values("date")
+
