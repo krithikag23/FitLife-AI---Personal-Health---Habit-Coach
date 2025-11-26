@@ -17,3 +17,10 @@ All data stays **offline** for full privacy 🔒
 ---
 
 ## 🧠 How Health Score is Calculated
+| Metric | Points |
+|--------|-------:|
+| Steps | 0–40 |
+| Sleep quality | 0–25 |
+| Water intake | 0–20 |
+| Habit completion (3 daily) | 0–15 |
+| **Total** | **100** |
