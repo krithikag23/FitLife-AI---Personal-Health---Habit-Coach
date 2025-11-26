@@ -13,3 +13,5 @@ All data stays **offline** for full privacy 🔒
 ✔ Interactive charts for progress  
 ✔ CSV export from History tab
 ✔ Offline local database (SQLite)
+
+---
