@@ -29,3 +29,5 @@ All data stays **offline** for full privacy 🔒
 
 ---
 ## 🚀 Run Locally
+
+### 1️⃣ Install dependencies
