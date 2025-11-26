@@ -26,3 +26,5 @@ All data stays **offline** for full privacy 🔒
 | **Total** | **100** |
 
 📌 Helps you improve where it matters most!
+
+---
