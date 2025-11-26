@@ -11,3 +11,4 @@ All data stays **offline** for full privacy 🔒
 ✔ Weekly goal tracking (default: 50,000 steps)  
 ✔ Trend insights with motivational messages  
 ✔ Interactive charts for progress  
+✔ CSV export from History tab
