@@ -28,3 +28,4 @@ All data stays **offline** for full privacy 🔒
 📌 Helps you improve where it matters most!
 
 ---
+## 🚀 Run Locally
