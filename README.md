@@ -34,7 +34,15 @@ All data stays **offline** for full privacy 🔒
 
 ## 🚀 Run Locally
 
-### 1️⃣ Install dependencies  
+###  Install dependencies  
 
 Create a file named `requirements.txt`:
+streamlit
+pandas
+plotly
 
+
+Install packages:
+
+```sh
+pip install -r requirements.txt
