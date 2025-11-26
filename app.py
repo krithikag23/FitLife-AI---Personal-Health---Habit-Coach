@@ -5,7 +5,6 @@ import datetime as dt
 import plotly.express as px
 from pathlib import Path
 
-
 DB_PATH = "fitlife.db"
 
 # ----------------- DB HELPERS -----------------
