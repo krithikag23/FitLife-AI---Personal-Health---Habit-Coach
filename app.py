@@ -6,7 +6,6 @@ import plotly.express as px
 from pathlib import Path
 
 DB_PATH = "fitlife.db"
-
 # ----------------- DB HELPERS -----------------
 def init_db():
     conn = sqlite3.connect(DB_PATH)
