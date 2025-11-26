@@ -32,3 +32,6 @@ All data stays **offline** for full privacy 🔒
 
 ### 1️⃣ Install dependencies
 Create `requirements.txt`:
+streamlit
+pandas
+plotly
