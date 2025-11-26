@@ -35,3 +35,7 @@ Create `requirements.txt`:
 streamlit
 pandas
 plotly
+
+Install:
+```sh
+pip install -r requirements.txt
