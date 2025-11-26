@@ -15,3 +15,5 @@ All data stays **offline** for full privacy 🔒
 ✔ Offline local database (SQLite)
 
 ---
+
+## 🧠 How Health Score is Calculated
