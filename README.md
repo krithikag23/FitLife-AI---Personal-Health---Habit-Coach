@@ -24,4 +24,5 @@ All data stays **offline** for full privacy 🔒
 | Water intake | 0–20 |
 | Habit completion (3 daily) | 0–15 |
 | **Total** | **100** |
+
 📌 Helps you improve where it matters most!
