@@ -12,3 +12,4 @@ All data stays **offline** for full privacy 🔒
 ✔ Trend insights with motivational messages  
 ✔ Interactive charts for progress  
 ✔ CSV export from History tab
+✔ Offline 
